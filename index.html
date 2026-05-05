@@ -77,6 +77,166 @@
             --glass-blur: 20px;
         }
 
+        /* Vigenere Table Styling */
+        .vigenere-table-container {
+            max-height: 400px;
+            overflow: auto;
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+        }
+        .vigenere-grid {
+            display: grid;
+            grid-template-columns: repeat(27, minmax(30px, 1fr));
+            gap: 1px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            background: #080D1A;
+            transition: all 0.2s ease;
+        }
+        .cell-header {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818CF8;
+            font-weight: bold;
+            position: sticky;
+            z-index: 10;
+        }
+        .cell-header.top { top: 0; }
+        .cell-header.left { left: 0; }
+        .cell.highlight {
+            background: #6366F1 !important;
+            color: white !important;
+            font-weight: bold;
+            transform: scale(1.4);
+            z-index: 50;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 1);
+            border: 2px solid white;
+            border-radius: 4px;
+        }
+        .cell.active-row {
+            background: rgba(99, 102, 241, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .cell.active-col {
+            background: rgba(99, 102, 241, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes light-sweep {
+            0% { transform: translateX(-100%) skewX(-25deg); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateX(200%) skewX(-25deg); opacity: 0; }
+        }
+
+        .light-sweep-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), rgba(255,255,255,0.1), rgba(168, 85, 247, 0.2), transparent);
+            animation: light-sweep 4s infinite linear;
+            filter: blur(40px);
+        }
+
+        /* Full Screen Table Overlay Morphing */
+        #tableOverlay {
+            position: fixed;
+            top: 50%; left: 50%; width: 0; height: 0;
+            background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0a 100%);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 2rem;
+            overflow: hidden;
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #tableOverlay.active {
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 0;
+            opacity: 1;
+        }
+
+        #vigenereTableContainer {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #vigenereTableContainer.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        @keyframes overlay-fade-in {
+            from { opacity: 0; transform: scale(1.05); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #floatingSteps {
+            position: fixed;
+            width: 320px;
+            max-height: 80vh;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            z-index: 1100;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow-y: auto;
+        }
+
+        #floatingSteps.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #floatingSteps::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1.5rem;
+            padding: 2px;
+            background: linear-gradient(to bottom right, rgba(99, 102, 241, 0.5), transparent, rgba(168, 85, 247, 0.5));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+            overflow-y: auto;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            z-index: 1200;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
         body {
             background-color: var(--surface-900);
             color: #e2e8f0;
@@ -240,11 +400,11 @@
             position: absolute;
             top: var(--tab-pad);
             left: var(--tab-pad);
-            width: calc((100% - (var(--tab-pad) * 2) - var(--tab-gap)) / 2);
+            width: 80px;
             height: calc(100% - (var(--tab-pad) * 2));
             background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
             border-radius: 0.6rem;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 0;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
         }
@@ -374,17 +534,21 @@
             <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white flex items-center justify-center gap-2 sm:gap-3">
                 <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">CipherLab</span>
                 <div class="lite-badge">
-                    <span class="text-white text-xs uppercase tracking-widest px-3 py-1">Lite</span>
+                    <span class="text-white text-xs uppercase tracking-widest px-3 py-1">Lite Plus</span>
                 </div>
             </h1>
-            <p class="text-sm sm:text-base text-gray-400">Kalkulator Vigenere & Caesar Cipher</p>
+            <p class="text-sm sm:text-base text-gray-400">Kalkulator Kriptografi Klasik & Modern</p>
         </header>
 
         <div class="glass-card p-4 sm:p-6">
-            <div class="tab-container mb-6 sm:mb-8">
+            <div class="tab-container mb-6 sm:mb-8 overflow-x-auto pb-2">
                 <div id="tab-indicator" class="tab-indicator"></div>
-                <button onclick="switchTab('vigenere')" id="tab-vigenere" class="tab-btn active font-semibold">Vigenere Cipher</button>
-                <button onclick="switchTab('caesar')" id="tab-caesar" class="tab-btn font-semibold text-gray-400">Caesar Cipher</button>
+                <button onclick="switchTab('vigenere')" id="tab-vigenere" class="tab-btn active font-semibold whitespace-nowrap">Vigenere</button>
+                <button onclick="switchTab('caesar')" id="tab-caesar" class="tab-btn font-semibold text-gray-400 whitespace-nowrap">Caesar</button>
+                <button onclick="switchTab('affine')" id="tab-affine" class="tab-btn font-semibold text-gray-400 whitespace-nowrap">Affine</button>
+                <button onclick="switchTab('hill')" id="tab-hill" class="tab-btn font-semibold text-gray-400 whitespace-nowrap">Hill</button>
+                <button onclick="switchTab('playfair')" id="tab-playfair" class="tab-btn font-semibold text-gray-400 whitespace-nowrap">Playfair</button>
+                <button onclick="switchTab('rsa')" id="tab-rsa" class="tab-btn font-semibold text-gray-400 whitespace-nowrap">RSA</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
@@ -399,6 +563,39 @@
 
                     <div id="key-container">
                         <label id="keyLabel" class="block text-sm font-medium text-gray-300 mb-1">Kunci (Key)</label>
+                        <div id="affineKeys" class="hidden grid grid-cols-2 gap-3 mb-2">
+                            <div class="input-wrapper">
+                                <input type="number" id="inputA" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="a (Coprime 26)">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="inputB" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="b">
+                            </div>
+                        </div>
+                        <div id="hillKeys" class="hidden grid grid-cols-2 gap-3 mb-2">
+                            <div class="input-wrapper">
+                                <input type="number" id="m00" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="K1,1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="m01" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="K1,2">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="m10" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="K2,1">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="m11" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="K2,2">
+                            </div>
+                        </div>
+                        <div id="rsaKeys" class="hidden grid grid-cols-3 gap-3 mb-2">
+                            <div class="input-wrapper">
+                                <input type="number" id="rsa_e" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="e">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="rsa_d" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="d (Dec only)">
+                            </div>
+                            <div class="input-wrapper">
+                                <input type="number" id="rsa_n" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="n">
+                            </div>
+                        </div>
                         <div class="input-wrapper">
                             <input type="text" id="inputKey" class="w-full p-3 rounded-lg input-field relative z-10" placeholder="Masukkan kunci...">
                         </div>
@@ -442,17 +639,99 @@
             </div>
         </div>
 
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div id="vigenereVisualizerSection" class="glass-card p-4 sm:p-6 overflow-hidden hidden mb-8">
+            <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                Vigenere Visualizer
+            </h3>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <p class="text-gray-400 text-sm flex-grow">Pelajari pemetaan karakter pada Tabula Recta untuk memahami mekanisme sandi Vigenere.</p>
+                <div id="vigenereBtnContainer" class="flex gap-2">
+                    <button id="btnPlainTable" onclick="openPlainVigenere()" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-all border border-white/10 active:scale-95 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        Lihat Tabel
+                    </button>
+                    <button id="btnLastResult" onclick="reOpenVigenereOverlay()" class="hidden px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        Lihat Hasil Terakhir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    <!-- Full Screen Overlay Morphing -->
+    <div id="tableOverlay" class="hidden">
+        <div class="flex flex-col h-full max-w-7xl mx-auto w-full">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <button onclick="closeOverlay()" class="back-btn flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all active:scale-95 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Kembali</span>
+                </button>
+
+                <!-- Small Search Tool -->
+                <div class="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 backdrop-blur-xl shadow-xl">
+                    <div class="flex items-center gap-1.5 px-2">
+                        <input type="text" id="searchPlain" placeholder="P" maxlength="1" class="w-10 bg-white/5 border border-white/10 rounded-lg py-1.5 text-center text-white text-xs focus:outline-none focus:border-indigo-500 uppercase">
+                        <span class="text-gray-600 text-[10px]">+</span>
+                        <input type="text" id="searchKey" placeholder="K" maxlength="1" class="w-10 bg-white/5 border border-white/10 rounded-lg py-1.5 text-center text-white text-xs focus:outline-none focus:border-indigo-500 uppercase">
+                        <button onclick="searchVigenereCoord()" class="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all active:scale-90 ml-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 p-4 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+                <!-- Glassmorphism Reflection Effect -->
+                <div class="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-all duration-700"></div>
+                
+                <div class="relative z-10">
+                    <h2 class="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-white to-purple-400">Visualisasi Tabula Recta</h2>
+                    <p class="text-gray-300 text-[11px] sm:text-sm mt-1">Ketuk sel untuk melihat perpotongan secara manual atau gunakan pencarian di atas.</p>
+                </div>
+            </div>
+
+            <!-- Animation Light Sweep (Dynamic Element) -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+                <div class="light-sweep-overlay"></div>
+            </div>
+
+            <div id="vigenereTableContainer" class="vigenere-table-container rounded-xl border border-white/10 flex-grow shadow-2xl bg-black/40 relative">
+                <div id="vigenereGrid" class="vigenere-grid">
+                    <!-- JS generated cells -->
+                </div>
+            </div>
+        </div>
+
+        <div id="floatingSteps" class="hidden">
+            <h4 class="text-indigo-400 font-bold mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Detail Langkah
+            </h4>
+            <div id="floatingStepsContent" class="text-sm text-gray-300 space-y-4"></div>
+        </div>
+    </div>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div class="glass-card p-4 sm:p-6 space-y-3">
-                <h4 class="text-lg font-semibold text-indigo-400">Apa itu Vigenere Cipher?</h4>
-                <p class="text-sm text-gray-400 leading-relaxed">
-                    Vigenere Cipher adalah metode menyandikan teks alfabet dengan menggunakan deretan Caesar cipher yang berbeda berdasarkan huruf-huruf pada kata kunci. Ini merupakan bentuk substitusi polialfabetik yang lebih kuat dari Caesar cipher biasa.
-                </p>
+                <h4 class="text-lg font-semibold text-indigo-400">Classical</h4>
+                <div class="text-xs text-gray-400 space-y-2 leading-relaxed">
+                    <p><strong>Vigenere:</strong> Substitusi polialfabetik menggunakan kata kunci.</p>
+                    <p><strong>Caesar:</strong> Pergeseran alfabet tetap.</p>
+                    <p><strong>Affine:</strong> Substitusi monoalfabetik dengan rumus $ax + b \pmod{26}$.</p>
+                </div>
             </div>
             <div class="glass-card p-4 sm:p-6 space-y-3">
-                <h4 class="text-lg font-semibold text-purple-400">Apa itu Caesar Cipher?</h4>
-                <p class="text-sm text-gray-400 leading-relaxed">
-                    Caesar Cipher adalah salah satu teknik enkripsi paling sederhana dan paling terkenal. Sandbox ini menggunakan sistem "geseran" di mana setiap huruf dalam teks asli digantikan oleh huruf lain yang memiliki selisih posisi tertentu dalam alfabet.
+                <h4 class="text-lg font-semibold text-purple-400">Block & Matrix</h4>
+                <div class="text-xs text-gray-400 space-y-2 leading-relaxed">
+                    <p><strong>Hill:</strong> Menggunakan perkalian matriks $2 \times 2$ mod 26.</p>
+                    <p><strong>Playfair:</strong> Menggunakan matriks $5 \times 5$ dan aturan pasangan huruf.</p>
+                </div>
+            </div>
+            <div class="glass-card p-4 sm:p-6 space-y-3">
+                <h4 class="text-lg font-semibold text-emerald-400">Modern</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    <strong>RSA:</strong> Algoritma kunci publik (asimetris) paling populer. Menggunakan prinsip faktorisasi bilangan prima besar.
                 </p>
             </div>
         </section>
